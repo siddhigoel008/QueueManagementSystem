@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Seva Kendra — Kiosk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0E2A47; --navy-2:#173A5E; --saffron:#E29227; --paper:#FAF6EE;
+    --ink:#1B1B1B; --green:#2F7D5D; --red:#B5493D; --line:#D8CFBC;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--paper);
+    font-family:'IBM Plex Sans',sans-serif; color:var(--ink);
+    display:flex; align-items:center; justify-content:center; padding:32px;
+  }
+  .kiosk{ width:420px; background:#fff; border-radius:6px; box-shadow:0 30px 60px -20px rgba(14,42,71,0.35); overflow:hidden; border:1px solid var(--line); }
+  .bar{ background:var(--navy); color:#fff; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; }
+  .bar .mark{ display:flex; align-items:center; gap:10px; }
+  .seal{ width:30px; height:30px; border-radius:50%; border:1.5px solid var(--saffron); display:flex; align-items:center; justify-content:center; font-size:13px; }
+  .bar h1{ font-family:'Fraunces',serif; font-weight:600; font-size:16px; margin:0; }
+  .bar .sub{ font-size:10px; opacity:.75; margin-top:1px; }
+  .clock{ font-family:'IBM Plex Mono',monospace; font-size:11px; opacity:.85; }
+  .conn{ font-size:9.5px; margin-top:2px; font-family:'IBM Plex Mono',monospace; }
+  .conn.ok{ color:#8FD8B7; } .conn.bad{ color:#E9A9A0; }
+
+  .screen{ padding:22px 20px 26px; }
+  .eyebrow{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--navy-2); font-weight:600; margin-bottom:4px; }
+  .prompt{ font-family:'Fraunces',serif; font-size:20px; font-weight:600; margin:0 0 14px; color:var(--navy); }
+
+  .name-row{ margin-bottom:14px; }
+  .name-row input{
+    width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:5px;
+    font-family:inherit; font-size:13.5px; background:#fff;
+  }
+  .name-row label{ font-size:11px; color:#7a7a7a; display:block; margin-bottom:5px; }
+
+  .services{ display:flex; flex-direction:column; gap:10px; }
+  .svc{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:14px 14px; border:1px solid var(--line); border-radius:5px;
+    background:#fff; cursor:pointer; text-align:left; transition:border-color .15s, background .15s;
+  }
+  .svc:hover{ border-color:var(--saffron); background:#FFF9EF; }
+  .svc[disabled]{ opacity:.5; cursor:not-allowed; }
+  .svc .name{ font-size:14.5px; font-weight:500; }
+  .svc .meta{ font-size:11.5px; color:#6b6b6b; margin-top:2px; }
+  .svc .go{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--saffron); font-weight:700; }
+
+  .msg{ text-align:center; font-size:12.5px; color:#7a7a7a; padding:20px 0; }
+  .msg.err{ color:var(--red); }
+
+  .token-view{ display:none; }
+  .ticket{ position:relative; border:1.5px dashed var(--line); border-radius:8px; padding:22px 18px 20px; text-align:center; background:#FFFDF9; }
+  .ticket::before, .ticket::after{ content:""; position:absolute; width:16px; height:16px; background:var(--paper); border-radius:50%; top:50%; transform:translateY(-50%); }
+  .ticket::before{ left:-8px; } .ticket::after{ right:-8px; }
+  .ticket .svc-tag{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--navy-2); font-weight:600; }
+  .ticket .num{ font-family:'IBM Plex Mono',monospace; font-size:40px; font-weight:700; color:var(--navy); margin:8px 0 4px; letter-spacing:1px; }
+  .ticket .counter{ font-size:12.5px; color:#555; }
+  .stats{ display:flex; gap:10px; margin-top:16px; }
+  .stat{ flex:1; border:1px solid var(--line); border-radius:5px; padding:10px 8px; text-align:center; }
+  .stat .v{ font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:700; color:var(--green); }
+  .stat .l{ font-size:10.5px; color:#7a7a7a; margin-top:2px; }
+  .note{ margin-top:16px; font-size:12px; color:#555; background:#F3EFE4; border-radius:5px; padding:10px 12px; line-height:1.5; }
+  .back{ margin-top:14px; width:100%; padding:11px; border-radius:5px; border:1px solid var(--line); background:#fff; font-family:'IBM Plex Sans',sans-serif; font-size:13px; cursor:pointer; }
+  .live{ font-size:10.5px; color:var(--green); margin-top:8px; text-align:center; font-family:'IBM Plex Mono',monospace; }
+</style>
+</head>
+<body>
+  <div class="kiosk">
+    <div class="bar">
+      <div class="mark">
+        <div class="seal">&#127470;&#127475;</div>
+        <div>
+          <h1>Seva Kendra Kiosk</h1>
+          <div class="sub">Municipal Service Centre · Counter Terminal</div>
+        </div>
+      </div>
+      <div>
+        <div class="clock" id="clock">--:--</div>
+        <div class="conn bad" id="conn">connecting...</div>
+      </div>
+    </div>
+
+    <div class="screen" id="select-screen">
+      <div class="eyebrow">Step 1 of 2</div>
+      <p class="prompt">What have you come for today?</p>
+      <div class="name-row">
+        <label for="citizenName">Your name (for the token)</label>
+        <input id="citizenName" placeholder="e.g. Ramesh Kumar" />
+      </div>
+      <div class="services" id="services">
+        <div class="msg">Loading services…</div>
+      </div>
+    </div>
+
+    <div class="screen token-view" id="token-screen">
+      <div class="eyebrow">Step 2 of 2</div>
+      <p class="prompt">Your token is ready</p>
+      <div class="ticket">
+        <div class="svc-tag" id="t-svc">—</div>
+        <div class="num" id="t-num">—</div>
+        <div class="counter" id="t-counter">—</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="v" id="t-ahead">—</div><div class="l">people ahead</div></div>
+        <div class="stat"><div class="v" id="t-wait">—</div><div class="l">est. wait</div></div>
+      </div>
+      <div class="note">You'll be notified as your turn nears — feel free to step away.</div>
+      <div class="live" id="live-tag"></div>
+      <button class="back" onclick="reset()">← Choose a different service</button>
+    </div>
+  </div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+  // Point this at your backend. Defaults to localhost while developing.
+  const API_BASE = window.API_BASE || 'http://localhost:5000';
+  let socket, currentTokenId = null, currentService = null;
+
+  function tick(){
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  }
+  tick(); setInterval(tick, 1000*20);
+
+  function setConn(ok, text){
+    const el = document.getElementById('conn');
+    el.textContent = text;
+    el.className = 'conn ' + (ok ? 'ok' : 'bad');
+  }
+
+  async function loadServices(){
+    try{
+      const res = await fetch(`${API_BASE}/api/services`);
+      if(!res.ok) throw new Error('bad response');
+      const services = await res.json();
+      const wrap = document.getElementById('services');
+      wrap.innerHTML = '';
+      services.forEach(svc => {
+        const div = document.createElement('div');
+        div.className = 'svc';
+        div.innerHTML = `<div><div class="name">${svc.name}</div><div class="meta">~${svc.avgServiceTimeMinutes} min/citizen</div></div><div class="go">→</div>`;
+        div.onclick = () => issue(svc.code, svc.name);
+        wrap.appendChild(div);
+      });
+      setConn(true, 'connected to backend');
+    }catch(err){
+      document.getElementById('services').innerHTML = `<div class="msg err">Can't reach the backend at ${API_BASE}. Check it's running (npm run dev) and API_BASE is correct.</div>`;
+      setConn(false, 'backend unreachable');
+    }
+  }
+
+  async function issue(serviceType, serviceName){
+    const citizenName = document.getElementById('citizenName').value.trim() || 'Walk-in Citizen';
+    try{
+      const res = await fetch(`${API_BASE}/api/tokens`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ serviceType, citizenName })
+      });
+      if(!res.ok) throw new Error('token creation failed');
+      const token = await res.json();
+      currentTokenId = token._id;
+      currentService = serviceType;
+      showToken(serviceName, token);
+      connectSocket(serviceType);
+    }catch(err){
+      alert('Could not create a token. Confirm the backend is running and reachable.');
+    }
+  }
+
+  function showToken(serviceName, token){
+    document.getElementById('select-screen').style.display='none';
+    document.getElementById('token-screen').style.display='block';
+    document.getElementById('t-svc').textContent = serviceName.toUpperCase();
+    document.getElementById('t-num').textContent = token.tokenNumber || token._id;
+    document.getElementById('t-counter').textContent = token.assignedCounter ? `Proceed to Counter ${token.assignedCounter} when called` : 'Counter will be assigned shortly';
+    document.getElementById('t-ahead').textContent = token.peopleAhead ?? '—';
+    document.getElementById('t-wait').textContent = token.estimatedWait ? token.estimatedWait + 'm' : '—';
+  }
+
+  async function refreshStatus(){
+    if(!currentTokenId) return;
+    try{
+      const res = await fetch(`${API_BASE}/api/tokens/${currentTokenId}/status`);
+      if(!res.ok) return;
+      const status = await res.json();
+      document.getElementById('t-ahead').textContent = status.peopleAhead ?? '—';
+      document.getElementById('t-wait').textContent = status.estimatedWait ? status.estimatedWait + 'm' : '—';
+      if(status.status === 'called'){
+        document.getElementById('live-tag').textContent = '🔔 It\'s your turn — please proceed to your counter';
+      }
+    }catch(err){ /* ignore transient errors */ }
+  }
+
+  function connectSocket(serviceType){
+    if(socket) socket.disconnect();
+    socket = io(API_BASE);
+    socket.on('connect', () => document.getElementById('live-tag').textContent = 'Live updates connected');
+    socket.emit('joinServiceRoom', serviceType);
+    socket.on('queueUpdated', refreshStatus);
+  }
+
+  function reset(){
+    document.getElementById('select-screen').style.display='block';
+    document.getElementById('token-screen').style.display='none';
+    document.getElementById('live-tag').textContent = '';
+    currentTokenId = null;
+    if(socket) socket.disconnect();
+  }
+
+  loadServices();
+</script>
+</body>
+</html>
