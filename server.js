@@ -18,7 +18,9 @@ const io = new Server(server, { cors: { origin: '*' } });
 // Make io reachable inside route files via req.app.get('io')
 app.set('io', io);
 
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:5171'
+}));
 app.use(express.json());
 
 connectDB();
