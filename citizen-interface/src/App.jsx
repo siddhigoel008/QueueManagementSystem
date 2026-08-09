@@ -1,8 +1,154 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./index.css";
+
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+
+const translations = {
+  English: {
+    heroTag: "🏛️ Digital Government Service",
+    heroHeadingLine1: "Skip the Queue.",
+    heroHeadingLine2: "Save Your Time.",
+    heroDesc: "Select your government service, get a digital token, and track your queue without standing in line.",
+    getStarted: "Get Started →",
+    heroCardTitle: "Your Time Matters",
+    heroCardDesc: "Know your queue position and estimated waiting time in real time.",
+    heroStatLabel: "Example wait time",
+    feature1Title: "Digital Token",
+    feature1Desc: "Get your token without standing in a physical queue.",
+    feature2Title: "Live Wait Time",
+    feature2Desc: "Know how many people are ahead of you.",
+    feature3Title: "Status Updates",
+    feature3Desc: "Receive SMS-style updates about your token.",
+
+    servicesStep: "STEP 1 OF 4",
+    servicesHeading: "Select a Service",
+    servicesDesc: "Choose the government service you need today.",
+
+    visitStep: "STEP 2 OF 4",
+    visitHeading: "How would you like to visit?",
+    youSelected: "You selected:",
+    appointmentTitle: "Appointment",
+    appointmentDesc: "Choose a scheduled visit time.",
+    walkinTitle: "Walk-in",
+    walkinDesc: "Get a token and join the queue now.",
+    continueArrow: "Continue →",
+
+    generateStep: "STEP 3 OF 4",
+    generateHeading: "Confirm Your Request",
+    generateDesc: "Check your details before generating your token.",
+    serviceLabel: "Service",
+    visitTypeLabel: "Visit Type",
+    accessModeLabel: "Access Mode",
+    standardMode: "Standard",
+    accessibilityMode: "Accessibility Mode",
+    generateBtn: "🎫 Generate My Token",
+    citizenNameLabel: "Your Full Name",
+    citizenNamePlaceholder: "e.g. Ramesh Kumar",
+    nameRequired: "Please enter your name to generate a token.",
+    generating: "Generating...",
+    tokenServerError: "Could not reach the server. Is the backend running?",
+    counterPending: "To be assigned",
+
+    queueStep: "STEP 4 OF 4",
+    queueHeading: "Your Queue Status",
+    queueDesc: "You don't need to stand in line. You can wait comfortably until your turn.",
+    yourToken: "YOUR TOKEN",
+    assignedCounter: "Assigned Counter",
+    liveQueue: "Live Queue",
+    live: "● LIVE",
+    peopleAhead: "people ahead of you",
+    estimatedWaitLabel: "Estimated waiting time",
+    minutes: "minutes",
+    currentStatus: "Current Status",
+    statusWaiting: "Waiting",
+    smsNotification: "SMS-style notification",
+    simulateBtn: "🔔 Simulate \"Token Called\"",
+    returnHome: "← Return to Home",
+    back: "← Back",
+
+    footerLine1: "Smart Citizen Queue Management System",
+    footerLine2: "Accessible • Transparent • Citizen-Centric"
+  },
+
+  Hindi: {
+    heroTag: "🏛️ डिजिटल सरकारी सेवा",
+    heroHeadingLine1: "कतार में न रुकें।",
+    heroHeadingLine2: "अपना समय बचाएं।",
+    heroDesc: "अपनी सरकारी सेवा चुनें, डिजिटल टोकन प्राप्त करें, और बिना लाइन में खड़े हुए अपनी बारी को ट्रैक करें।",
+    getStarted: "शुरू करें →",
+    heroCardTitle: "आपका समय महत्वपूर्ण है",
+    heroCardDesc: "अपनी बारी की स्थिति और अनुमानित प्रतीक्षा समय वास्तविक समय में जानें।",
+    heroStatLabel: "उदाहरण प्रतीक्षा समय",
+    feature1Title: "डिजिटल टोकन",
+    feature1Desc: "बिना भौतिक कतार में खड़े हुए अपना टोकन प्राप्त करें।",
+    feature2Title: "लाइव प्रतीक्षा समय",
+    feature2Desc: "जानें कि आपसे पहले कितने लोग हैं।",
+    feature3Title: "स्थिति अपडेट",
+    feature3Desc: "अपने टोकन के बारे में एसएमएस-शैली के अपडेट प्राप्त करें।",
+
+    servicesStep: "चरण 1 / 4",
+    servicesHeading: "एक सेवा चुनें",
+    servicesDesc: "आज आपको जिस सरकारी सेवा की आवश्यकता है उसे चुनें।",
+
+    visitStep: "चरण 2 / 4",
+    visitHeading: "आप कैसे आना चाहेंगे?",
+    youSelected: "आपने चुना:",
+    appointmentTitle: "अपॉइंटमेंट",
+    appointmentDesc: "एक निर्धारित मुलाकात समय चुनें।",
+    walkinTitle: "वॉक-इन",
+    walkinDesc: "अभी टोकन प्राप्त करें और कतार में शामिल हों।",
+    continueArrow: "जारी रखें →",
+
+    generateStep: "चरण 3 / 4",
+    generateHeading: "अपने अनुरोध की पुष्टि करें",
+    generateDesc: "टोकन जनरेट करने से पहले अपना विवरण जांच लें।",
+    serviceLabel: "सेवा",
+    visitTypeLabel: "मुलाकात का प्रकार",
+    accessModeLabel: "पहुँच मोड",
+    standardMode: "मानक",
+    accessibilityMode: "सुगमता मोड",
+    generateBtn: "🎫 मेरा टोकन जनरेट करें",
+    citizenNameLabel: "आपका पूरा नाम",
+    citizenNamePlaceholder: "जैसे रमेश कुमार",
+    nameRequired: "टोकन जनरेट करने के लिए कृपया अपना नाम दर्ज करें।",
+    generating: "जनरेट हो रहा है...",
+    tokenServerError: "सर्वर से संपर्क नहीं हो सका। क्या बैकएंड चल रहा है?",
+    counterPending: "आवंटन शेष",
+
+    queueStep: "चरण 4 / 4",
+    queueHeading: "आपकी कतार की स्थिति",
+    queueDesc: "आपको लाइन में खड़े होने की ज़रूरत नहीं है। आप आराम से अपनी बारी तक प्रतीक्षा कर सकते हैं।",
+    yourToken: "आपका टोकन",
+    assignedCounter: "निर्धारित काउंटर",
+    liveQueue: "लाइव कतार",
+    live: "● लाइव",
+    peopleAhead: "लोग आपसे आगे हैं",
+    estimatedWaitLabel: "अनुमानित प्रतीक्षा समय",
+    minutes: "मिनट",
+    currentStatus: "वर्तमान स्थिति",
+    statusWaiting: "प्रतीक्षा में",
+    smsNotification: "एसएमएस-शैली सूचना",
+    simulateBtn: "🔔 \"टोकन बुलाया गया\" का अनुकरण करें",
+    returnHome: "← होम पर वापस जाएं",
+    back: "← वापस",
+
+    footerLine1: "स्मार्ट सिटीज़न क्यू मैनेजमेंट सिस्टम",
+    footerLine2: "सुलभ • पारदर्शी • नागरिक-केंद्रित"
+  }
+};
 
 function App() {
   const [page, setPage] = useState("home");
+
+  // --- Staff / Supervisor login state ---
+  const [employeeId, setEmployeeId] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [authUser, setAuthUser] = useState(() => {
+    const saved = localStorage.getItem("qms_auth");
+    return saved ? JSON.parse(saved) : null;
+  });
 
   const [selectedService, setSelectedService] = useState("");
 
@@ -14,32 +160,45 @@ function App() {
 
   const [largeText, setLargeText] = useState(false);
 
-  const [status, setStatus] = useState("Waiting");
+  const [status, setStatus] = useState("waiting");
 
   const [peopleAhead, setPeopleAhead] = useState(6);
 
   const [estimatedWait, setEstimatedWait] = useState(30);
 
-  const [counter, setCounter] = useState("Counter 3");
+  const [counter, setCounter] = useState("");
+
+  const [citizenName, setCitizenName] = useState("");
+  const [tokenId, setTokenId] = useState(null);
+  const [tokenLoading, setTokenLoading] = useState(false);
+  const [tokenError, setTokenError] = useState("");
+
+  const t = translations[language] || translations.English;
 
   const services = [
     {
       name: "Birth / Death Certificate",
+      nameHi: "जन्म / मृत्यु प्रमाणपत्र",
       icon: "📄",
       description: "Apply for birth or death certificate services",
-      prefix: "BDC"
+      descriptionHi: "जन्म या मृत्यु प्रमाणपत्र सेवाओं के लिए आवेदन करें",
+      code: "BIRTH"
     },
     {
       name: "Income / Domicile Certificate",
+      nameHi: "आय / अधिवास प्रमाणपत्र",
       icon: "🏠",
       description: "Apply for income or domicile certificates",
-      prefix: "INC"
+      descriptionHi: "आय या अधिवास प्रमाणपत्र के लिए आवेदन करें",
+      code: "INC"
     },
     {
       name: "Welfare-Scheme Enquiry",
+      nameHi: "कल्याण-योजना पूछताछ",
       icon: "🤝",
       description: "Get information about government welfare schemes",
-      prefix: "WEL"
+      descriptionHi: "सरकारी कल्याण योजनाओं के बारे में जानकारी प्राप्त करें",
+      code: "WELFARE"
     }
   ];
 
@@ -53,21 +212,79 @@ function App() {
     setPage("generate");
   }
 
-  function generateToken() {
+  async function fetchTokenStatus(id) {
+    try {
+      const response = await fetch(`${API_BASE}/api/tokens/${id}/status`);
+      if (!response.ok) return;
+      const data = await response.json();
+
+      setStatus(data.status);
+      setPeopleAhead(data.peopleAhead);
+      setEstimatedWait(data.estimatedWait);
+    } catch (err) {
+      // Silent fail on a background poll — don't interrupt the citizen's screen
+      // over a single dropped request. The next poll will retry.
+    }
+  }
+
+  useEffect(() => {
+    if (page !== "queue" || !tokenId) return;
+
+    fetchTokenStatus(tokenId);
+
+    const interval = setInterval(() => {
+      fetchTokenStatus(tokenId);
+    }, 6000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, tokenId]);
+
+  async function generateToken() {
+    setTokenError("");
+
+    if (!citizenName.trim()) {
+      setTokenError(t.nameRequired);
+      return;
+    }
+
     const selected = services.find(
       (service) => service.name === selectedService
     );
 
-    const generatedToken = `${selected.prefix}-014`;
+    setTokenLoading(true);
 
-    setTokenNumber(generatedToken);
+    try {
+      const response = await fetch(`${API_BASE}/api/tokens`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serviceType: selected.code,
+          citizenName: citizenName.trim()
+        })
+      });
 
-    setPeopleAhead(6);
-    setEstimatedWait(30);
-    setCounter("Counter 3");
-    setStatus("Waiting");
+      const data = await response.json();
 
-    setPage("queue");
+      if (!response.ok) {
+        setTokenError(data.error || t.tokenServerError);
+        setTokenLoading(false);
+        return;
+      }
+
+      setTokenId(data._id);
+      setTokenNumber(data.tokenNumber);
+      setEstimatedWait(data.estimatedWait);
+      setCounter(data.assignedCounter || "");
+      setStatus("waiting");
+      setPeopleAhead(0);
+
+      setPage("queue");
+    } catch (err) {
+      setTokenError(t.tokenServerError);
+    } finally {
+      setTokenLoading(false);
+    }
   }
 
   function changeLanguage(event) {
@@ -83,12 +300,71 @@ function App() {
     setSelectedService("");
     setVisitType("");
     setTokenNumber("");
+    setTokenId(null);
+    setCitizenName("");
+    setTokenError("");
   }
 
   function simulateTokenCall() {
+    // Demo-only fallback: in the real flow, this happens when counter staff
+    // click "Call Next" on the staff dashboard, and this screen picks it up
+    // automatically via polling. Use this button only when demoing without
+    // a second staff-side session open.
     setPeopleAhead(0);
     setEstimatedWait(0);
-    setStatus("Please proceed to Counter 3");
+    setStatus("called");
+  }
+
+  async function handleLogin(event) {
+    event.preventDefault();
+    setLoginError("");
+
+    if (!employeeId || !password) {
+      setLoginError("Enter both employee ID and password.");
+      return;
+    }
+
+    setLoginLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employeeId, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setLoginError(data.error || "Invalid credentials. Please try again.");
+        setLoginLoading(false);
+        return;
+      }
+
+      const user = {
+        token: data.token,
+        name: data.name,
+        role: data.role,
+        assignedCounter: data.assignedCounter
+      };
+
+      localStorage.setItem("qms_auth", JSON.stringify(user));
+      setAuthUser(user);
+      setPassword("");
+      setPage("staffHome");
+    } catch (err) {
+      setLoginError("Could not reach the server. Is the backend running?");
+    } finally {
+      setLoginLoading(false);
+    }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("qms_auth");
+    setAuthUser(null);
+    setEmployeeId("");
+    setLoginError("");
+    setPage("home");
   }
 
   return (
@@ -134,6 +410,13 @@ function App() {
             {largeText ? "Normal Text" : "A+ Large Text"}
           </button>
 
+          <button
+            className="staff-login-link"
+            onClick={() => setPage(authUser ? "staffHome" : "login")}
+          >
+            {authUser ? `👤 ${authUser.name}` : "Staff Login"}
+          </button>
+
         </div>
 
       </header>
@@ -150,25 +433,24 @@ function App() {
             <div className="hero-content">
 
               <span className="badge">
-                🏛️ Digital Government Service
+                {t.heroTag}
               </span>
 
               <h2>
-                Skip the Queue.
+                {t.heroHeadingLine1}
                 <br />
-                <span>Save Your Time.</span>
+                <span>{t.heroHeadingLine2}</span>
               </h2>
 
               <p>
-                Select your government service, get a digital token,
-                and track your queue without standing in line.
+                {t.heroDesc}
               </p>
 
               <button
                 className="primary-button"
                 onClick={() => setPage("services")}
               >
-                Get Started →
+                {t.getStarted}
               </button>
 
             </div>
@@ -181,12 +463,11 @@ function App() {
               </div>
 
               <h3>
-                Your Time Matters
+                {t.heroCardTitle}
               </h3>
 
               <p>
-                Know your queue position and estimated waiting time
-                in real time.
+                {t.heroCardDesc}
               </p>
 
               <div className="hero-stat">
@@ -196,7 +477,7 @@ function App() {
                 </strong>
 
                 <span>
-                  Example wait time
+                  {t.heroStatLabel}
                 </span>
 
               </div>
@@ -215,11 +496,11 @@ function App() {
               </div>
 
               <h3>
-                Digital Token
+                {t.feature1Title}
               </h3>
 
               <p>
-                Get your token without standing in a physical queue.
+                {t.feature1Desc}
               </p>
 
             </div>
@@ -232,11 +513,11 @@ function App() {
               </div>
 
               <h3>
-                Live Wait Time
+                {t.feature2Title}
               </h3>
 
               <p>
-                Know how many people are ahead of you.
+                {t.feature2Desc}
               </p>
 
             </div>
@@ -249,11 +530,11 @@ function App() {
               </div>
 
               <h3>
-                Status Updates
+                {t.feature3Title}
               </h3>
 
               <p>
-                Receive SMS-style updates about your token.
+                {t.feature3Desc}
               </p>
 
             </div>
@@ -275,22 +556,22 @@ function App() {
             className="back-button"
             onClick={() => setPage("home")}
           >
-            ← Back
+            {t.back}
           </button>
 
 
           <section className="page-heading">
 
             <span className="step-label">
-              STEP 1 OF 4
+              {t.servicesStep}
             </span>
 
             <h2>
-              Select a Service
+              {t.servicesHeading}
             </h2>
 
             <p>
-              Choose the government service you need today.
+              {t.servicesDesc}
             </p>
 
           </section>
@@ -313,11 +594,11 @@ function App() {
                 <div className="service-content">
 
                   <h3>
-                    {service.name}
+                    {language === "Hindi" ? service.nameHi : service.name}
                   </h3>
 
                   <p>
-                    {service.description}
+                    {language === "Hindi" ? service.descriptionHi : service.description}
                   </p>
 
                 </div>
@@ -347,23 +628,25 @@ function App() {
             className="back-button"
             onClick={() => setPage("services")}
           >
-            ← Back
+            {t.back}
           </button>
 
 
           <section className="page-heading">
 
             <span className="step-label">
-              STEP 2 OF 4
+              {t.visitStep}
             </span>
 
             <h2>
-              How would you like to visit?
+              {t.visitHeading}
             </h2>
 
             <p>
-              You selected:
-              <strong> {selectedService}</strong>
+              {t.youSelected}
+              <strong> {language === "Hindi"
+                ? services.find((s) => s.name === selectedService)?.nameHi
+                : selectedService}</strong>
             </p>
 
           </section>
@@ -381,15 +664,15 @@ function App() {
               </div>
 
               <h3>
-                Appointment
+                {t.appointmentTitle}
               </h3>
 
               <p>
-                Choose a scheduled visit time.
+                {t.appointmentDesc}
               </p>
 
               <span>
-                Continue →
+                {t.continueArrow}
               </span>
 
             </button>
@@ -405,15 +688,15 @@ function App() {
               </div>
 
               <h3>
-                Walk-in
+                {t.walkinTitle}
               </h3>
 
               <p>
-                Get a token and join the queue now.
+                {t.walkinDesc}
               </p>
 
               <span>
-                Continue →
+                {t.continueArrow}
               </span>
 
             </button>
@@ -435,22 +718,22 @@ function App() {
             className="back-button"
             onClick={() => setPage("visit")}
           >
-            ← Back
+            {t.back}
           </button>
 
 
           <section className="page-heading">
 
             <span className="step-label">
-              STEP 3 OF 4
+              {t.generateStep}
             </span>
 
             <h2>
-              Confirm Your Request
+              {t.generateHeading}
             </h2>
 
             <p>
-              Check your details before generating your token.
+              {t.generateDesc}
             </p>
 
           </section>
@@ -461,11 +744,13 @@ function App() {
             <div className="confirmation-row">
 
               <span>
-                Service
+                {t.serviceLabel}
               </span>
 
               <strong>
-                {selectedService}
+                {language === "Hindi"
+                  ? services.find((s) => s.name === selectedService)?.nameHi
+                  : selectedService}
               </strong>
 
             </div>
@@ -474,7 +759,7 @@ function App() {
             <div className="confirmation-row">
 
               <span>
-                Visit Type
+                {t.visitTypeLabel}
               </span>
 
               <strong>
@@ -487,21 +772,40 @@ function App() {
             <div className="confirmation-row">
 
               <span>
-                Access Mode
+                {t.accessModeLabel}
               </span>
 
               <strong>
-                {largeText ? "Accessibility Mode" : "Standard"}
+                {largeText ? t.accessibilityMode : t.standardMode}
               </strong>
 
             </div>
 
 
+            <label className="login-label" htmlFor="citizenName">
+              {t.citizenNameLabel}
+            </label>
+            <input
+              id="citizenName"
+              className="login-input"
+              type="text"
+              value={citizenName}
+              onChange={(e) => setCitizenName(e.target.value)}
+              placeholder={t.citizenNamePlaceholder}
+            />
+
+            {tokenError && (
+              <p className="login-error">
+                {tokenError}
+              </p>
+            )}
+
             <button
               className="primary-button full-width"
               onClick={generateToken}
+              disabled={tokenLoading}
             >
-              🎫 Generate My Token
+              {tokenLoading ? t.generating : t.generateBtn}
             </button>
 
           </div>
@@ -520,16 +824,15 @@ function App() {
           <section className="queue-header">
 
             <span className="step-label">
-              STEP 4 OF 4
+              {t.queueStep}
             </span>
 
             <h2>
-              Your Queue Status
+              {t.queueHeading}
             </h2>
 
             <p>
-              You don't need to stand in line.
-              You can wait comfortably until your turn.
+              {t.queueDesc}
             </p>
 
           </section>
@@ -543,7 +846,7 @@ function App() {
             <div className="token-card">
 
               <p className="token-label">
-                YOUR TOKEN
+                {t.yourToken}
               </p>
 
               <h1>
@@ -554,18 +857,20 @@ function App() {
 
                 <div>
                   <span>
-                    Service
+                    {t.serviceLabel}
                   </span>
 
                   <strong>
-                    {selectedService}
+                    {language === "Hindi"
+                      ? services.find((s) => s.name === selectedService)?.nameHi
+                      : selectedService}
                   </strong>
                 </div>
 
 
                 <div>
                   <span>
-                    Visit Type
+                    {t.visitTypeLabel}
                   </span>
 
                   <strong>
@@ -576,11 +881,11 @@ function App() {
 
                 <div>
                   <span>
-                    Assigned Counter
+                    {t.assignedCounter}
                   </span>
 
                   <strong>
-                    {counter}
+                    {counter || t.counterPending}
                   </strong>
                 </div>
 
@@ -596,11 +901,11 @@ function App() {
               <div className="status-header">
 
                 <h3>
-                  Live Queue
+                  {t.liveQueue}
                 </h3>
 
                 <span className="live-indicator">
-                  ● LIVE
+                  {t.live}
                 </span>
 
               </div>
@@ -613,7 +918,7 @@ function App() {
                 </strong>
 
                 <span>
-                  people ahead of you
+                  {t.peopleAhead}
                 </span>
 
               </div>
@@ -622,11 +927,11 @@ function App() {
               <div className="wait-time">
 
                 <span>
-                  Estimated waiting time
+                  {t.estimatedWaitLabel}
                 </span>
 
                 <strong>
-                  {estimatedWait} minutes
+                  {estimatedWait} {t.minutes}
                 </strong>
 
               </div>
@@ -650,11 +955,13 @@ function App() {
               <div className="current-status">
 
                 <span>
-                  Current Status
+                  {t.currentStatus}
                 </span>
 
                 <strong>
-                  {status}
+                  {status === "waiting"
+                    ? t.statusWaiting
+                    : `${language === "Hindi" ? "कृपया आगे बढ़ें" : "Please proceed to"} ${counter}`}
                 </strong>
 
               </div>
@@ -675,14 +982,18 @@ function App() {
             <div>
 
               <span>
-                SMS-style notification
+                {t.smsNotification}
               </span>
 
               <p>
 
-                {status === "Waiting"
-                  ? `Your token ${tokenNumber} is active. ${peopleAhead} people are ahead of you. Estimated wait is ${estimatedWait} minutes.`
-                  : `Your token ${tokenNumber} is now called. Please proceed to ${counter}.`
+                {status === "waiting"
+                  ? (language === "Hindi"
+                      ? `आपका टोकन ${tokenNumber} सक्रिय है। आपसे पहले ${peopleAhead} लोग हैं। अनुमानित प्रतीक्षा ${estimatedWait} मिनट है।`
+                      : `Your token ${tokenNumber} is active. ${peopleAhead} people are ahead of you. Estimated wait is ${estimatedWait} minutes.`)
+                  : (language === "Hindi"
+                      ? `आपका टोकन ${tokenNumber} अब बुलाया गया है। कृपया ${counter} पर जाएं।`
+                      : `Your token ${tokenNumber} is now called. Please proceed to ${counter}.`)
                 }
 
               </p>
@@ -698,7 +1009,7 @@ function App() {
             className="simulate-button"
             onClick={simulateTokenCall}
           >
-            🔔 Simulate "Token Called"
+            {t.simulateBtn}
           </button>
 
 
@@ -706,7 +1017,126 @@ function App() {
             className="home-button"
             onClick={goHome}
           >
-            ← Return to Home
+            {t.returnHome}
+          </button>
+
+        </main>
+
+      )}
+
+
+      {/* STAFF / SUPERVISOR LOGIN */}
+
+      {page === "login" && (
+
+        <main className="main-container">
+
+          <button
+            className="back-button"
+            onClick={() => setPage("home")}
+          >
+            ← Back
+          </button>
+
+          <section className="page-heading">
+            <span className="step-label">
+              STAFF ACCESS
+            </span>
+
+            <h2>
+              Counter Staff / Supervisor Login
+            </h2>
+
+            <p>
+              This login is for government staff only. Citizens do not need
+              an account to join a queue.
+            </p>
+          </section>
+
+          <form className="login-card" onSubmit={handleLogin}>
+
+            <label className="login-label" htmlFor="employeeId">
+              Employee ID
+            </label>
+            <input
+              id="employeeId"
+              className="login-input"
+              type="text"
+              autoComplete="username"
+              value={employeeId}
+              onChange={(e) => setEmployeeId(e.target.value)}
+              placeholder="e.g. STAFF001"
+            />
+
+            <label className="login-label" htmlFor="password">
+              Password
+            </label>
+            <input
+              id="password"
+              className="login-input"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+
+            {loginError && (
+              <p className="login-error">
+                {loginError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="primary-button full-width"
+              disabled={loginLoading}
+            >
+              {loginLoading ? "Signing in..." : "Sign In"}
+            </button>
+
+          </form>
+
+        </main>
+
+      )}
+
+
+      {/* STAFF LANDING (post-login placeholder — full dashboard is a separate screen) */}
+
+      {page === "staffHome" && authUser && (
+
+        <main className="main-container">
+
+          <section className="page-heading">
+            <span className="step-label">
+              LOGGED IN AS {authUser.role.toUpperCase()}
+            </span>
+
+            <h2>
+              Welcome, {authUser.name}
+            </h2>
+
+            <p>
+              {authUser.role === "staff"
+                ? `Assigned counter: ${authUser.assignedCounter || "Not assigned"}`
+                : "You have supervisor-level access to all counters."}
+            </p>
+          </section>
+
+          <div className="hero-card">
+            <p>
+              The full staff dashboard (call next, complete, skip, redirect,
+              priority overrides) is built separately. This screen confirms
+              your login is working end-to-end against the real backend.
+            </p>
+          </div>
+
+          <button
+            className="back-button"
+            onClick={handleLogout}
+          >
+            Log Out
           </button>
 
         </main>
@@ -719,11 +1149,11 @@ function App() {
       <footer>
 
         <p>
-          Smart Citizen Queue Management System
+          {t.footerLine1}
         </p>
 
         <p>
-          Accessible • Transparent • Citizen-Centric
+          {t.footerLine2}
         </p>
 
       </footer>
