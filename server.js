@@ -19,7 +19,9 @@ const io = new Server(server, { cors: { origin: '*' } });
 app.set('io', io);
 
 app.use(cors({
-    origin: 'http://localhost:5171'
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
