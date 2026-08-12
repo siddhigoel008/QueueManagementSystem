@@ -19,17 +19,18 @@ function calculateEstimatedWait(peopleAhead, avgServiceTimeMinutes) {
   return peopleAhead * avgServiceTimeMinutes;
 }
 
-// Generates something like "INC-014" - counts today's tokens for that service and increments.
+// Generates something like "INC-014" - counts ALL tokens ever issued for that service
+// and increments. (Previously this counted only today's tokens and reset to -001 daily,
+// but tokenNumber is a globally-unique field in the database, so a fresh "-001" on any
+// day after the first would always collide with an old token and crash token creation.
+// Counting all-time avoids that collision permanently, at the cost of not resetting to
+// -001 each morning - numbers just keep climbing, which is fine for a demo/prototype.)
 async function generateTokenNumber(Token, serviceCode) {
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-
-  const countToday = await Token.countDocuments({
-    serviceType: serviceCode,
-    createdAt: { $gte: startOfToday }
+  const countAllTime = await Token.countDocuments({
+    serviceType: serviceCode
   });
 
-  const nextNumber = countToday + 1;
+  const nextNumber = countAllTime + 1;
   return `${serviceCode}-${String(nextNumber).padStart(3, '0')}`;
 }
 

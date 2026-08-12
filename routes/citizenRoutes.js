@@ -5,6 +5,15 @@ const { generateTokenNumber, sortByPriority, calculateEstimatedWait } = require(
 
 const router = express.Router();
 
+// Midnight today, in the server's local time. Used to scope "people ahead" to
+// today's citizens only, so tokens left over from a previous test/demo day
+// don't inflate today's estimated wait forever.
+function startOfToday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
 // GET /api/services - list all departments (Member 2 uses this for the service selection screen)
 router.get('/services', async (req, res) => {
   try {
@@ -28,7 +37,14 @@ router.post('/tokens', async (req, res) => {
     if (!service) return res.status(404).json({ error: 'Service type not found' });
 
     const tokenNumber = await generateTokenNumber(Token, serviceType);
-    const waitingAhead = await Token.countDocuments({ serviceType, status: 'waiting' });
+
+    // Only count today's still-waiting tokens - a token left "waiting" from a
+    // previous test/demo day shouldn't count as a real person ahead of you.
+    const waitingAhead = await Token.countDocuments({
+      serviceType,
+      status: 'waiting',
+      createdAt: { $gte: startOfToday() }
+    });
     const estimatedWait = calculateEstimatedWait(waitingAhead, service.avgServiceTimeMinutes);
 
     const newToken = await Token.create({
@@ -55,7 +71,14 @@ router.get('/tokens/:id/status', async (req, res) => {
     if (!token) return res.status(404).json({ error: 'Token not found' });
 
     const service = await ServiceType.findOne({ code: token.serviceType });
-    const waitingTokens = await Token.find({ serviceType: token.serviceType, status: 'waiting' });
+
+    // Same "today only" scoping as above, so old leftover tokens don't
+    // permanently distort everyone's live position and wait estimate.
+    const waitingTokens = await Token.find({
+      serviceType: token.serviceType,
+      status: 'waiting',
+      createdAt: { $gte: startOfToday() }
+    });
     const sorted = sortByPriority(waitingTokens);
 
     const position = sorted.findIndex((t) => t._id.toString() === token._id.toString());

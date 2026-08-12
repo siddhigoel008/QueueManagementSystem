@@ -18,8 +18,17 @@ const io = new Server(server, { cors: { origin: '*' } });
 // Make io reachable inside route files via req.app.get('io')
 app.set('io', io);
 
+// Accept requests from any localhost Vite port during development,
+// so it doesn't break every time Vite picks a different free port.
 app.use(cors({
-    origin: 'http://localhost:5171'
+  origin: (origin, callback) => {
+    if (!origin || /^http:\/\/localhost:\d+$/.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
 }));
 app.use(express.json());
 
