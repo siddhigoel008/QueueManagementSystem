@@ -42,7 +42,7 @@
    ```
    You should see `MongoDB connected` and `Server running on port 5000`.
 
-7. **Test it's alive**: open `http://localhost:5000` in a browser — you should see
+7. **Test it's alive**: open `http://https://queue-backend-82a8.onrender.com` in a browser — you should see
    "Queue Management Backend is running".
 
 ## Testing your API before frontend is ready
@@ -51,25 +51,25 @@ Use Postman, Insomnia, or even `curl`. Example flow:
 
 ```bash
 # 1. List services
-curl http://localhost:5000/api/services
+curl http://https://queue-backend-82a8.onrender.com/api/services
 
 # 2. Citizen joins a queue
-curl -X POST http://localhost:5000/api/tokens \
+curl -X POST http://https://queue-backend-82a8.onrender.com/api/tokens \
   -H "Content-Type: application/json" \
   -d '{"serviceType":"INC","citizenName":"Test Citizen"}'
 # Copy the "_id" from the response for step 3
 
 # 3. Check status
-curl http://localhost:5000/api/tokens/<paste_id_here>/status
+curl http://https://queue-backend-82a8.onrender.com/api/tokens/<paste_id_here>/status
 
 # 4. Staff login
-curl -X POST http://localhost:5000/api/auth/login \
+curl -X POST http://https://queue-backend-82a8.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"employeeId":"STAFF001","password":"staff123"}'
 # Copy the "token" from the response for step 5
 
 # 5. Staff calls the next citizen (needs the login token from step 4)
-curl -X POST http://localhost:5000/api/staff/tokens/<paste_id_here>/call \
+curl -X POST http://https://queue-backend-82a8.onrender.com/api/staff/tokens/<paste_id_here>/call \
   -H "Authorization: Bearer <paste_login_token_here>"
 ```
 
