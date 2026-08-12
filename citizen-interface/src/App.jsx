@@ -74,13 +74,14 @@ function App() {
       const response = await fetch(`${API_BASE}/api/tokens`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          serviceType: selectedServiceCode,
-          citizenName: citizenName.trim(),
-          visitType,
-          appointmentDate: visitType === "Appointment" ? `${appointmentDate}T${appointmentTime}` : null
-        })
-      });
+      body: JSON.stringify({
+  serviceType: selectedServiceCode,
+  citizenName: citizenName.trim(),
+  visitType,
+  appointmentDateTime: visitType === "Appointment"
+    ? `${appointmentDate}T${appointmentTime}`
+    : null
+})
 
       const data = await response.json();
 
